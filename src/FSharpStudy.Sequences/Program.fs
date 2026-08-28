@@ -72,6 +72,44 @@ let demoChoose () =
     |> Seq.choose (fun i ->
         if i % 2 = 0 then Some i else None)
     |> Seq.iter (printfn "  %d")
+        
+let demoCollect () =
+    let integers = [1; 2; 3]
+    printHeader "Seq.collect - Map to a collection, and flatten the result"
+    integers
+    |> Seq.collect (fun i -> seq { for j = 1 to 5 do yield i + j * 10 })
+    |> Seq.iter (printfn "%d")
+
+let demoCompareWith () =
+    let first = seq { 1; 3; 5; 7; 9 }
+    let second = seq { 1; 2; 3; 4; 5 }
+    printHeader "Seq.compareWith - Compare each element of two seqences"
+    
+    let comparison = Seq.compareWith (fun i j -> if i > j then 0 else -1) first second
+    let larger = comparison = 0
+    printfn "Elements from first sequence are always larger?: %b" larger
+
+let demoConcat () =
+    let first = seq { 1 .. 2 .. 10 }
+    let second = seq { 2 .. 2 .. 10 }
+    let third = seq { 3 .. 2 .. 10 }
+    printHeader "Seq.concat - Concat an enumeration of enumerations"
+
+    let enumerations = seq { first; second; third }
+    enumerations
+    |> Seq.concat
+    |> Seq.iter (printfn "%d")
+
+let demoChunkBySize () =
+    let integers = seq { 1 .. 100 }
+    printHeader "Seq.chunkBySize - Split a sequence to chunks of a specified size"
+    integers
+    |> Seq.chunkBySize 10
+    |> Seq.iter (fun chunk ->
+        chunk |> Seq.iter (printf "%d ")
+        printfn "")
+
+    
 
 [<EntryPoint>]
 let main _argv =
@@ -81,5 +119,9 @@ let main _argv =
     demoCache ()
     demoCast ()
     demoChoose ()
+    demoCollect ()
+    demoChunkBySize ()
+    demoCompareWith ()
+    demoConcat ()
     0
 
