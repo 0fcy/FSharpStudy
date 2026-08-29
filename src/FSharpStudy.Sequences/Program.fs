@@ -65,6 +65,15 @@ let demoCast () =
     |> Seq.cast<int>
     |> Seq.iter (printfn "  %d")
 
+let demoChunkBySize () =
+    let integers = seq { 1 .. 100 }
+    printHeader "Seq.chunkBySize - Split a sequence to chunks of a specified size"
+    integers
+    |> Seq.chunkBySize 10
+    |> Seq.iter (fun chunk ->
+        chunk |> Seq.iter (printf "%d ")
+        printfn "")
+
 let demoChoose () =
     let integers = seq { 1 .. 10 }
     printHeader "Seq.choose - Filter and map using an option-returning function"
@@ -100,15 +109,60 @@ let demoConcat () =
     |> Seq.concat
     |> Seq.iter (printfn "%d")
 
-let demoChunkBySize () =
-    let integers = seq { 1 .. 100 }
-    printHeader "Seq.chunkBySize - Split a sequence to chunks of a specified size"
-    integers
-    |> Seq.chunkBySize 10
-    |> Seq.iter (fun chunk ->
-        chunk |> Seq.iter (printf "%d ")
-        printfn "")
+let demoContains () =
+    let integers = seq { 5 .. 15 }
+    printHeader "Seq.contains - Check if a sequence contains an element"
 
+    let contains = integers |> Seq.contains 10
+    printfn "Sequence contains 10?: %b" contains
+
+let demoCountBy () =
+    let integers = seq {
+        for i = 0 to 10 do
+            for j = i to 10 do
+                yield j
+    }
+    printHeader "Seq.countBy - Count the number of occurences of elements in a sequence"
+
+    integers
+    |> Seq.countBy (fun i -> i)
+    |> Seq.iter (printfn "%O")
+
+let demoDelay () =
+    let myListFactory () = [
+        for i in 1 .. 5 do
+            printfn "Creating %d" i
+            yield i
+    ]
+    printHeader "Seq.delay - Delay the evaluation of eager sequences (like lists)"
+
+    let deferedSequence = 
+        printfn "*Start creating defered sequence*"
+        Seq.delay (fun () -> myListFactory () |> Seq.ofList)
+
+    printfn "Start iteration:"
+    deferedSequence |> Seq.iter (printfn "%d")
+
+let demoDistinct () =
+    let integers = seq {
+        for i in 1 .. 10 do
+            if i % 2 = 0 then
+                yield i
+            yield i
+    }
+    printHeader "Seq.distinct - Get distinct elements from a sequence"
+    
+    integers
+    |> Seq.distinct
+    |> Seq.iter (printfn "%d")
+
+let demoDistinctBy () =
+    let integers = seq { -5 .. 10 }
+    printHeader "Seq.distinctBy - Get distinct elements from a sequence, providing a key function"
+    
+    integers
+    |> Seq.distinctBy (fun i -> abs i)
+    |> Seq.iter (printfn "%d")
     
 
 [<EntryPoint>]
@@ -118,10 +172,15 @@ let main _argv =
     demoAverage ()
     demoCache ()
     demoCast ()
+    demoChunkBySize ()
     demoChoose ()
     demoCollect ()
-    demoChunkBySize ()
     demoCompareWith ()
     demoConcat ()
+    demoContains ()
+    demoCountBy ()
+    demoDelay ()
+    demoDistinct ()
+    demoDistinctBy ()
     0
 
