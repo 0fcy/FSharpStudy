@@ -164,6 +164,39 @@ let demoDistinctBy () =
     |> Seq.distinctBy (fun i -> abs i)
     |> Seq.iter (printfn "%d")
     
+let demoExactlyOne () =
+    let integers = seq { 1 }
+    printHeader "Seq.exactlyOne - Get the only element in a sequence (only when the sequence contains one element!)"
+    
+    integers
+    |> Seq.exactlyOne
+    |> printfn "%d"
+
+let demoExcept () =
+    let integers = seq { 1 .. 25 }
+    printHeader "Seq.except - Exclude elements from a sequence"
+    
+    let odd = seq { for i in 1 .. 2 .. 25 do yield i }
+    integers
+    |> Seq.except odd
+    |> Seq.iter (printfn "%d")
+
+let demoExists () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.exists - Check if a sequence contains an element"
+    
+    let isPrime n =
+        match n with
+        | _ when n < 2 -> false
+        | 2 -> true
+        | _ when n % 2 = 0 -> false
+        | _ ->
+            seq { 3 .. 2 .. int (sqrt (float n))}
+            |> Seq.forall (fun x -> n % x <> 0)
+
+    integers
+    |> Seq.exists isPrime
+    |> printfn "Sequence contains prime numbers?: %b"
 
 [<EntryPoint>]
 let main _argv =
@@ -182,5 +215,8 @@ let main _argv =
     demoDelay ()
     demoDistinct ()
     demoDistinctBy ()
+    demoExactlyOne ()
+    demoExcept ()
+    demoExists ()
     0
 
