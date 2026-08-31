@@ -196,7 +196,62 @@ let demoExists () =
 
     integers
     |> Seq.exists isPrime
-    |> printfn "Sequence contains prime numbers?: %b"
+    |> printfn "Sequence up to ten contains prime numbers?: %b"
+
+let demoExists2 () =
+    let integers = seq { 1 .. 5 }
+    let strings = seq { "one"; "two"; "three"; "four"; "five" }
+    printHeader "Seq.exists2 - Check if pairs of elements from two sequences match a predicate"
+    
+    integers
+    |> Seq.exists2 (fun (s: string) i -> i > s.Length) strings
+    |> printfn "Any integer up to five is greater than the number of characters it it's word from?: %b"
+    
+let demoFilter () =
+    let integers = seq { 1 .. 100 }
+    printHeader "Seq.filter - Filter a sequence"
+    
+    let isTriangular n =
+        let x = 8 * n + 1
+        let sqrtX = int (sqrt (float x))
+        sqrtX * sqrtX = x
+
+    integers
+    |> Seq.filter isTriangular
+    |> Seq.iter (printfn "%d")
+
+let demoFind () =
+    let triangular = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    
+    printHeader "Seq.find - Find the first element in a sequence that matches a predicate"
+    triangular
+    |> Seq.find (fun i -> i > 10)
+    |> printfn "First triangular greater than 10: %d"
+
+    printHeader "Seq.findBack - Find the first element from the end of a sequence that matches a predicate"
+    triangular
+    |> Seq.findBack (fun i -> i < 50)
+    |> printfn "First triangular less than 50: %d"
+
+    printHeader "Seq.findIndex - Find the first element in a sequence that matches a predicate, and return its index"
+    triangular
+    |> Seq.findIndex (fun i -> i > 10)
+    |> printfn "Index of first triangular greater than 10: %d"
+
+    printHeader "Seq.findIndexBack - Find the first element from the end of a sequence that matches a predicate, and return its index"
+    triangular
+    |> Seq.findIndexBack (fun i -> i < 50)
+    |> printfn "Index of first triangular less than 50: %d"
+
+
+let demoFold () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.fold - Aggregate a sequence with a generic state type using a fold function"
+
+    integers
+    |> Seq.fold (fun state i-> state + (sprintf " %d" i)) "Numbers from sequence:"
+    |> printfn "%s"
+
 
 [<EntryPoint>]
 let main _argv =
@@ -218,5 +273,9 @@ let main _argv =
     demoExactlyOne ()
     demoExcept ()
     demoExists ()
+    demoExists2 ()
+    demoFilter ()
+    demoFind ()
+    demoFold ()
     0
 
