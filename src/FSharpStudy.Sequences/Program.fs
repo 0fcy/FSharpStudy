@@ -246,12 +246,62 @@ let demoFind () =
 
 let demoFold () =
     let integers = seq { 1 .. 10 }
-    printHeader "Seq.fold - Aggregate a sequence with a generic state type using a fold function"
+    let folder state i = state + (sprintf " %d" i)
 
+    printHeader "Seq.fold - Aggregate a sequence with a generic state type using a fold function"
     integers
-    |> Seq.fold (fun state i-> state + (sprintf " %d" i)) "Numbers from sequence:"
+    |> Seq.fold folder "Numbers from sequence:"
     |> printfn "%s"
 
+let demoFoldBack () =
+    let integers = seq { 1 .. 10 }
+    let folder i state = state + (sprintf "%d " i)
+
+    printHeader "Seq.foldBack - Aggregate a sequence with a generic state type using an inverted fold function"
+
+    Seq.foldBack folder integers "Numbers from sequence backwards: "
+    |> printfn "%s"
+
+
+let demoFold2 () =
+    let integers = seq { 1 .. 5 }
+    let strings = seq { "one"; "two"; "three"; "four"; "five" }
+    printHeader "Seq.fold2 - Aggregate two sequences with a generic state type using a fold function"
+
+    let folder state i s = state + (sprintf "%i %s\n" i s)
+
+    (integers, strings)
+    ||> Seq.fold2 folder "Numbers from sequences:\n"
+    |> printfn "%s"
+
+let demoFoldBack2 () =
+    let integers = seq { 1 .. 5 }
+    let strings = seq { "one"; "two"; "three"; "four"; "five" }
+    printHeader "Seq.foldBack2 - Aggregate two sequences with a generic state type using an inverted fold function"
+    
+    let folder i s state = state + (sprintf "\n%i %s" i s)
+    
+    (integers, strings)
+    ||> Seq.foldBack2 folder
+    <| "Number from two sequences backwards:"
+    |> printfn "%s"
+
+let demoForAll () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.forAll - Check if a predicate is true for all elements"
+
+    integers
+    |> Seq.forall (fun i -> i > 2)
+    |> printfn "All elements are greater than two?: %b"
+    
+let demoForAll2 () =
+    let integers = seq { 1 .. 5 }
+    let strings = seq { "one"; "two"; "three"; "four"; "five" }
+    printHeader "Seq.forAll2 - Check if all paris of elements from two sequences match a predicate"
+
+    (integers, strings)
+    ||> Seq.forall2 (fun i s -> i + s.Length > 3)
+    |> printfn "Sum of integer and string.Length is more than three for all numbers up to 5?: %b"
 
 [<EntryPoint>]
 let main _argv =
@@ -277,5 +327,10 @@ let main _argv =
     demoFilter ()
     demoFind ()
     demoFold ()
+    demoFoldBack ()
+    demoFold2 ()
+    demoFoldBack2 ()
+    demoForAll ()
+    demoForAll2 ()
     0
 
