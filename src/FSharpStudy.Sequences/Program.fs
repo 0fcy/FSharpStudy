@@ -303,6 +303,58 @@ let demoForAll2 () =
     ||> Seq.forall2 (fun i s -> i + s.Length > 3)
     |> printfn "Sum of integer and string.Length is more than three for all numbers up to 5?: %b"
 
+let demoGroupBy () =
+    let integers = seq { 1u .. 10u }
+    printHeader "Seq.groupBy - Group elements in a sequence"
+
+    let isPerfectSquare x =
+        let s = uint (Math.Sqrt(float x))
+        s * s = x
+
+    let isFibonacci n =
+        let val1 = 5u * n * n + 4u
+        let val2 = 5u * n * n - 4u
+        isPerfectSquare val1 || isPerfectSquare val2
+
+    printfn "Is fibonacci?:"
+    integers
+    |> Seq.groupBy isFibonacci
+    |> Seq.iter (printfn "%A")
+
+let demoHead () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.head - Get the first element of the sequence"
+
+    integers
+    |> Seq.head
+    |> printfn "First element was: %d"
+
+let demoIndexed () =
+    let strings = seq { "zero"; "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine"; "ten" }
+    printHeader "Seq.indexed - Index each element in a sequence"
+
+    strings
+    |> Seq.indexed
+    |> Seq.iter (printfn "%A")
+
+let demoInit () =
+    printHeader "Seq.init - Generate a sequence using a function"
+
+    let mySequence i = i * (i + 1) / 2
+
+    Seq.init 20 mySequence
+    |> Seq.iter (printf "%d ")
+
+let demoInitInfinite () =
+    printHeader "Seq.initInfinite - Generate a sequence using a function without a bound"
+
+    let mySequence i = i * (i + 1) / 2
+
+    Seq.initInfinite mySequence
+    |> Seq.takeWhile (fun i -> i < 500)
+    |> Seq.iter (printf "%d ")
+
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -332,5 +384,10 @@ let main _argv =
     demoFoldBack2 ()
     demoForAll ()
     demoForAll2 ()
+    demoGroupBy ()
+    demoHead ()
+    demoIndexed ()
+    demoInit ()
+    demoInitInfinite ()
     0
 
