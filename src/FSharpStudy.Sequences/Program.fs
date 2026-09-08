@@ -354,6 +354,58 @@ let demoInitInfinite () =
     |> Seq.takeWhile (fun i -> i < 500)
     |> Seq.iter (printf "%d ")
 
+let demoInsertAt () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.insertAt - insert an element at an index in a sequence"
+
+    integers
+    |> Seq.insertAt 2 4
+    |> Seq.iter (printfn "%d")
+
+let demoInsertManyAt () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.insertManyAt - insert many elements at an index in a sequence"
+
+    (seq { 5 .. 2 .. 10}, integers)
+    ||> Seq.insertManyAt 4
+    |> Seq.iter (printfn "%d")
+
+let demoIsEmpty () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.isEmpty - check if a sequence is empty"
+
+    integers
+    |> Seq.isEmpty
+    |> printfn "The sequence was empty?: %b"
+
+let demoItem () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.item - get the element at the index"
+
+    integers
+    |> Seq.item 5
+    |> printfn "Item at fifth index: %d"
+
+let demoIter () =
+    let even = seq { 0 .. 2 .. 20 }
+    let triangular = Seq.init 10 (fun n -> n * (n + 1) / 2)
+    printHeader "Seq.iter2 - iterate two sequences together"
+
+    (even, triangular)
+    ||> Seq.iter2 (printfn "First item: %d; Second item %d")
+    
+    let strings = seq { "zero"; "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine"; "ten" }
+    printHeader "Seq.iteri - iterate with an index"
+
+    strings
+    |> Seq.iteri (fun i s -> printfn "%s is at index %d" s i)
+
+    let otherStrings = seq { "zero"; "jeden"; "dwa"; "trzy"; "cztery"; "piec"; "szesc"; "siedem"; "osiem"; "dziewiec"; "dziesiec" }
+    printHeader "Seq.iteri2 - iterate with an index on two sequences"
+
+    (strings, otherStrings)
+    ||> Seq.iteri2 (fun i e j -> printfn "%s ENG \t %s POL \t equals %d" e j i)
+
 
 [<EntryPoint>]
 let main _argv =
@@ -389,5 +441,10 @@ let main _argv =
     demoIndexed ()
     demoInit ()
     demoInitInfinite ()
+    demoInsertAt ()
+    demoInsertManyAt ()
+    demoIsEmpty ()
+    demoItem ()
+    demoIter ()
     0
 
