@@ -406,6 +406,23 @@ let demoIter () =
     (strings, otherStrings)
     ||> Seq.iteri2 (fun i e j -> printfn "%s ENG \t %s POL \t equals %d" e j i)
 
+let demoLast () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.last - Get the last element in the sequence"
+
+    integers
+    |> Seq.last
+    |> printfn "Last element was: %d"
+
+let demoLength () =
+    let triangular = Seq.initInfinite (fun n -> n * (n + 1) / 2)
+    printHeader "Seq.length - Get the length of the sequence"
+
+    triangular
+    |> Seq.takeWhile (fun i -> i < 500)
+    |> Seq.length
+    |> printfn "Number of triangular numbers under 500: %d"
+
 
 [<EntryPoint>]
 let main _argv =
@@ -446,5 +463,7 @@ let main _argv =
     demoIsEmpty ()
     demoItem ()
     demoIter ()
+    demoLast ()
+    demoLength ()
     0
 
