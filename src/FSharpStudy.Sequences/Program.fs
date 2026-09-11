@@ -423,6 +423,48 @@ let demoLength () =
     |> Seq.length
     |> printfn "Number of triangular numbers under 500: %d"
 
+let demoMap () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.map - Map elements in a sequence using a function"
+
+    integers
+    |> Seq.map (fun i -> i * i)
+    |> Seq.iter (printfn "%d")
+
+let demoMap2 () =
+    let odd = seq { 1 .. 2 .. 10 }
+    let even = seq { 0 .. 2 .. 10 }
+    printHeader "Seq.map2 - Map elements in two sequences using a function"
+
+    (odd, even)
+    ||> Seq.map2 (fun o e -> o * e)
+    |> Seq.iter (printfn "%d")
+
+let demoMap3 () =
+    let odd = seq { 1 .. 2 .. 10 }
+    let even = seq { 0 .. 2 .. 10 }
+    let fib = Seq.unfold (fun (a, b) -> Some(a + b, (b, a + b))) (0, 1)
+    printHeader "Seq.map3 - Map elements in three sequences using a function"
+
+    (odd, even, fib)
+    |||> Seq.map3 (fun o e f -> o * e * f)
+    |> Seq.iter (printfn "%d")
+
+let demoMapFold () =    
+    let integers = seq { 1  .. 10 }
+    printHeader "Seq.mapFold - Map elements in a sequence and apply Seq.fold"
+
+    integers
+    |> Seq.mapFold (fun s i -> (i * i, s + i * i)) 0
+    |> printfn "%A"
+
+let demoMapFoldBack () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.mapFoldBack - Map elements in a sequence and apply Seq.foldBack"
+
+    Seq.mapFoldBack (fun i s -> (i * i, s + sprintf "%d " (i * i))) integers "Squares backwards from 10: "
+    |> printfn "%A"
+
 
 [<EntryPoint>]
 let main _argv =
@@ -465,5 +507,10 @@ let main _argv =
     demoIter ()
     demoLast ()
     demoLength ()
+    demoMap ()
+    demoMap2 ()
+    demoMap3 ()
+    demoMapFold ()
+    demoMapFoldBack ()
     0
 
