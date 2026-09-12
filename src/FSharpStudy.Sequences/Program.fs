@@ -465,6 +465,55 @@ let demoMapFoldBack () =
     Seq.mapFoldBack (fun i s -> (i * i, s + sprintf "%d " (i * i))) integers "Squares backwards from 10: "
     |> printfn "%A"
 
+let demoMapi () =
+    let strings = seq { "zero"; "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine"; "ten" }
+    printHeader "Seq.mapi - Map elements in a sequence with an index"
+
+    strings
+    |> Seq.mapi (sprintf "equal to %d\t%s")
+    |> Seq.iter (printfn "%s")
+
+let demoMapi2 () =
+    let strings = seq { "zero"; "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine"; "ten" }
+    let otherStrings = seq { "zero"; "jeden"; "dwa"; "trzy"; "cztery"; "piec"; "szesc"; "siedem"; "osiem"; "dziewiec"; "dziesiec" }
+    printHeader "Seq.mapi - Map elements in a sequence with an index"
+
+    (strings, otherStrings)
+    ||> Seq.mapi2 (sprintf "equal to %d\t%s\t%s")
+    |> Seq.iter (printfn "%s")
+
+let demoMax () =
+    let integers = Seq.init 10 (fun _ -> Random.Shared.Next())
+    printHeader "Seq.max - Get the largest element where by T's comparison"
+
+    integers
+    |> Seq.max
+    |> printfn "Largest from ten random: %d"
+
+let demoMaxBy () =
+    let integers = Seq.init 10 (fun _ -> Random.Shared.Next())
+    printHeader "Seq.maxBy - Get the largest element with a comparison function"
+
+    integers
+    |> Seq.maxBy (fun i -> i % 2 = 0)
+    |> printfn "Largest even from ten random: %d" // Could be odd if no even numbers generated
+
+let demoMin () =
+    let integers = Seq.init 10 (fun _ -> Random.Shared.Next())
+    printHeader "Seq.min - Get the smallest element where by T's comparison"
+
+    integers
+    |> Seq.min
+    |> printfn "Smallest from ten random: %d"
+
+let demoMinBy () =
+    let integers = Seq.init 10 (fun _ -> Random.Shared.Next())
+    printHeader "Seq.minBy - Get the smallest element with a comparison function"
+
+    integers
+    |> Seq.minBy (fun i -> i % 2 = 1)
+    |> printfn "Smallest odd from ten random: %d"
+
 
 [<EntryPoint>]
 let main _argv =
@@ -512,5 +561,11 @@ let main _argv =
     demoMap3 ()
     demoMapFold ()
     demoMapFoldBack ()
+    demoMapi ()
+    demoMapi2 ()
+    demoMax ()
+    demoMaxBy ()
+    demoMin ()
+    demoMinBy ()
     0
 
