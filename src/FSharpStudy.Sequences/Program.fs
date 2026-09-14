@@ -514,6 +514,46 @@ let demoMinBy () =
     |> Seq.minBy (fun i -> i % 2 = 1)
     |> printfn "Smallest odd from ten random: %d"
 
+let demoOfArray () =
+    let integers = [|1 .. 10|]
+    printHeader "Seq.ofArray - Use sequence from an array"
+
+    integers
+    |> Seq.ofArray
+    |> Seq.iter (printfn "%d")
+
+let demoOfList () =
+    let integers = [1 .. 10]
+    printHeader "Seq.ofList - Use sequence from a list"
+
+    integers
+    |> Seq.ofList
+    |> Seq.iter (printfn "%d")
+
+let demoPairwise () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.pairwise - Pair each element with it's previous element (except the first element)"
+
+    integers
+    |> Seq.pairwise
+    |> Seq.iter (printfn "%A")
+
+let demoPermute () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.permute - Provide a function to map indexes of elements"
+
+    integers
+    |> Seq.permute (fun i -> if i % 2 = 1 then i - 1 else i + 1)
+    |> Seq.iter (printfn "%d")
+
+let demoPick () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.permute - Provide a function to map indexes of elements"
+
+    integers
+    |> Seq.pick (fun i -> if sqrt (float i) > 2 then Some i else None)
+    |> printfn "First value whose sqrt is greater than 2: %d"
+
 
 [<EntryPoint>]
 let main _argv =
@@ -567,5 +607,10 @@ let main _argv =
     demoMaxBy ()
     demoMin ()
     demoMinBy ()
+    demoOfArray ()
+    demoOfList ()
+    demoPairwise ()
+    demoPermute ()
+    demoPick ()
     0
 
