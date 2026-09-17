@@ -554,6 +554,64 @@ let demoPick () =
     |> Seq.pick (fun i -> if sqrt (float i) > 2 then Some i else None)
     |> printfn "First value whose sqrt is greater than 2: %d"
 
+let demoRandomChoice () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomChoice - Get a random element in the sequence"
+
+    integers
+    |> Seq.randomChoice
+    |> printfn "Random choice: %d"
+
+let demoRandomChoiceBy () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomChoiceBy - Get a random element in the sequence using a randomizer function"
+
+    integers
+    |> Seq.randomChoiceBy (fun () -> Random.Shared.NextDouble() ** 2)
+    |> printfn "Random choice, skewed by n * n: %d"
+
+let demoRandomChoices () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomChoices - Get random elements in the sequence"
+
+    integers
+    |> Seq.randomChoices 3
+    |> Seq.iter (printfn "Three random choices: %d")
+
+let demoRandomChoicesBy () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomChoicesBy - Get random elements in the sequence using a randomizer function"
+
+    integers
+    |> Seq.randomChoicesBy (fun () -> Math.Sin(Random.Shared.NextDouble() * Math.PI)) 3
+    |> Seq.iter (printfn "Three random choices: %d")
+
+type private MyRandom() =
+    inherit Random()
+
+    override this.Next (minValue: int, maxValue: int): int = 
+        if maxValue > 5 then
+            base.Next(minValue + 5, maxValue)
+        else
+            base.Next(minValue, maxValue)
+
+let demoRandomChoicesWith () =
+    let integers = seq { 1 .. 10 }
+    let random = new MyRandom()
+    printHeader "Seq.randomChoicesWith - Get random elements in the sequence using a random instance"
+    
+    integers
+    |> Seq.randomChoicesWith random 3
+    |> Seq.iter (printfn "Three random choices: %d")
+
+let demoRandomChoiceWith () =
+    let integers = seq { 1 .. 10 }
+    let random = new MyRandom()
+    printHeader "Seq.randomChoiceWith - Get a random element in the sequence using a random instance"
+    
+    integers
+    |> Seq.randomChoiceWith random
+    |> printfn "Random choice: %d"
 
 [<EntryPoint>]
 let main _argv =
@@ -612,5 +670,11 @@ let main _argv =
     demoPairwise ()
     demoPermute ()
     demoPick ()
+    demoRandomChoice ()
+    demoRandomChoiceBy ()
+    demoRandomChoices ()
+    demoRandomChoicesBy ()
+    demoRandomChoicesWith ()
+    demoRandomChoiceWith ()
     0
 
