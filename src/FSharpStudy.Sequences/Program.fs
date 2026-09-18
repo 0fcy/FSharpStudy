@@ -613,6 +613,31 @@ let demoRandomChoiceWith () =
     |> Seq.randomChoiceWith random
     |> printfn "Random choice: %d"
 
+let demoRandomSample () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomSample - Get distinct random elements in a sequence"
+    
+    integers
+    |> Seq.randomSample 5
+    |> Seq.iter (printfn "Random choice: %d")
+
+let demoRandomSampleBy () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomSampleBy - Get distinct random elements in a sequence, using a randomizer function"
+    
+    integers
+    |> Seq.randomSampleBy (fun () -> (1. - Random.Shared.NextDouble()) ** 2) 5
+    |> Seq.iter (printfn "Random choice: %d")
+
+let demoRandomSampleWith () =
+    let integers = seq { 1 .. 10 }
+    let random = new MyRandom()
+    printHeader "Seq.randomSampleBy - Get distinct random elements in a sequence, using a Random instance"
+    
+    integers
+    |> Seq.randomSampleWith random 5
+    |> Seq.iter (printfn "Random choice: %d")
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -676,5 +701,8 @@ let main _argv =
     demoRandomChoicesBy ()
     demoRandomChoicesWith ()
     demoRandomChoiceWith ()
+    demoRandomSample ()
+    demoRandomSampleBy ()
+    demoRandomSampleWith ()
     0
 
