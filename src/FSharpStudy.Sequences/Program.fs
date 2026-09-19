@@ -586,7 +586,7 @@ let demoRandomChoicesBy () =
     |> Seq.randomChoicesBy (fun () -> Math.Sin(Random.Shared.NextDouble() * Math.PI)) 3
     |> Seq.iter (printfn "Three random choices: %d")
 
-type private MyRandom() =
+type private ExcludeFirstFiveRandom() =
     inherit Random()
 
     override this.Next (minValue: int, maxValue: int): int = 
@@ -597,7 +597,7 @@ type private MyRandom() =
 
 let demoRandomChoicesWith () =
     let integers = seq { 1 .. 10 }
-    let random = new MyRandom()
+    let random = new ExcludeFirstFiveRandom()
     printHeader "Seq.randomChoicesWith - Get random elements in the sequence using a random instance"
     
     integers
@@ -606,7 +606,7 @@ let demoRandomChoicesWith () =
 
 let demoRandomChoiceWith () =
     let integers = seq { 1 .. 10 }
-    let random = new MyRandom()
+    let random = new ExcludeFirstFiveRandom()
     printHeader "Seq.randomChoiceWith - Get a random element in the sequence using a random instance"
     
     integers
@@ -619,24 +619,49 @@ let demoRandomSample () =
     
     integers
     |> Seq.randomSample 5
-    |> Seq.iter (printfn "Random choice: %d")
+    |> Seq.iter (printfn "%d")
 
 let demoRandomSampleBy () =
     let integers = seq { 1 .. 10 }
     printHeader "Seq.randomSampleBy - Get distinct random elements in a sequence, using a randomizer function"
     
     integers
-    |> Seq.randomSampleBy (fun () -> (1. - Random.Shared.NextDouble()) ** 2) 5
-    |> Seq.iter (printfn "Random choice: %d")
+    |> Seq.randomSampleBy (fun () -> 1. - (Random.Shared.NextDouble() ** 2)) 5
+    |> Seq.iter (printfn "%d")
 
 let demoRandomSampleWith () =
     let integers = seq { 1 .. 10 }
-    let random = new MyRandom()
-    printHeader "Seq.randomSampleBy - Get distinct random elements in a sequence, using a Random instance"
+    let random = new ExcludeFirstFiveRandom()
+    printHeader "Seq.randomSampleWith - Get distinct random elements in a sequence, using a Random instance"
     
     integers
     |> Seq.randomSampleWith random 5
-    |> Seq.iter (printfn "Random choice: %d")
+    |> Seq.iter (printfn "%d")
+
+let demoRandomShuffle () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomShuffle - Randomly shuffle the order of the entire sequence"
+    
+    integers
+    |> Seq.randomShuffle
+    |> Seq.iter (printfn "%d")
+
+let demoRandomShuffleBy () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.randomShuffleBy - Randomly shuffle the order of the entire sequence, with a randomizer function"
+    
+    integers
+    |> Seq.randomShuffleBy (fun () -> 1. - (Random.Shared.NextDouble() ** 2))
+    |> Seq.iter (printfn "%d")
+
+let demoRandomShuffleWith () =
+    let integers = seq { 1 .. 10 }
+    let random = Random.Shared
+    printHeader "Seq.randomShuffleWith - Randomly shuffle the order of the entire sequence, using a Random instance"
+    
+    integers
+    |> Seq.randomShuffleWith random
+    |> Seq.iter (printfn "%d")
 
 [<EntryPoint>]
 let main _argv =
@@ -704,5 +729,8 @@ let main _argv =
     demoRandomSample ()
     demoRandomSampleBy ()
     demoRandomSampleWith ()
+    demoRandomShuffle ()
+    demoRandomShuffleBy ()
+    demoRandomShuffleWith ()
     0
 
