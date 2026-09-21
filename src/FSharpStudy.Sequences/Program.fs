@@ -663,6 +663,71 @@ let demoRandomShuffleWith () =
     |> Seq.randomShuffleWith random
     |> Seq.iter (printfn "%d")
 
+let demoReadonly () = 
+    let integers = [| 1 .. 10 |]
+    printHeader "Seq.readonly - Create a readonly view of the sequence"
+    
+    let view =
+        integers
+        |> Seq.readonly
+
+    try
+        view
+        :?> int array
+        |> Seq.iter (printfn "%d")
+    with
+    | ex -> printfn "Cannot insert into readonly seq:\n%s" ex.Message
+
+let demoReduce () =
+    let triangular = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    printHeader "Seq.reduce - combine all elements of a sequence to a single value"
+    
+    let expression =
+        triangular
+        |> Seq.map string
+        |> String.concat " + "
+
+    triangular
+    |> Seq.reduce (+)
+    |> printfn "Result of %s = %d" expression
+
+let demoReduceBack () =
+    let triangular = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    printHeader "Seq.reduceBack - combine all elements of a sequence to a single value backwards"
+    
+    let expression =
+        triangular
+        |> Seq.rev
+        |> Seq.map string
+        |> String.concat " - "
+
+    triangular
+    |> Seq.reduceBack (fun x y -> y - x)
+    |> printfn "Result of %s = %d" expression
+
+let demoRemoveManyAt () =
+    let integers = seq { 1 .. 10 }
+    printHeader "Seq.removeManyAt - remove many elements in the sequence"
+
+    integers
+    |> Seq.removeManyAt 3 4
+    |> Seq.iter (printfn "%d")
+
+let demoReplicate () =
+    printHeader "Seq.replicate - create a sequence with the same item up to a count"
+
+    Seq.replicate 12 3
+    |> Seq.iter (printfn "%d")
+
+let demoRev () =
+    let integers = seq { -10 .. 2 .. 10 }
+    printHeader "Seq.rev - reverse the sequence"
+
+    integers
+    |> Seq.rev
+    |> Seq.iter (printfn "%d")
+
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -732,5 +797,11 @@ let main _argv =
     demoRandomShuffle ()
     demoRandomShuffleBy ()
     demoRandomShuffleWith ()
+    demoReadonly ()
+    demoReduce ()
+    demoReduceBack ()
+    demoRemoveManyAt ()
+    demoReplicate ()
+    demoRev ()
     0
 
