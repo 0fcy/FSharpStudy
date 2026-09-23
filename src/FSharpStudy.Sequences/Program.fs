@@ -727,6 +727,28 @@ let demoRev () =
     |> Seq.rev
     |> Seq.iter (printfn "%d")
 
+let demoScan () =
+    let integers = seq { -10 .. 10 }
+    printHeader "Seq.scan - fold and create results for each intermediate element, stored in a sequence"
+
+    integers
+    |> Seq.scan (+) 0
+    |> Seq.iter (printfn "%d")
+
+let demoScanBack () =
+    let integers = seq { -10 .. 10 }
+    printHeader "Seq.scanBack - fold and create results for each intermediate element in reverse order, stored in a sequence"
+
+    (integers, 0)
+    ||> Seq.scanBack (+)
+    |> Seq.iter (printfn "%d")
+
+let demoSingleton () =
+    printHeader "Seq.singleton - wrap a single element in a new sequence"
+
+    10
+    |> Seq.singleton
+    |> printfn "%A"
 
 [<EntryPoint>]
 let main _argv =
@@ -803,5 +825,8 @@ let main _argv =
     demoRemoveManyAt ()
     demoReplicate ()
     demoRev ()
+    demoScan ()
+    demoScanBack ()
+    demoSingleton ()
     0
 
