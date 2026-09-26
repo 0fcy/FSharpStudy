@@ -750,6 +750,56 @@ let demoSingleton () =
     |> Seq.singleton
     |> printfn "%A"
 
+let demoSkip () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.skip - return a sequence without the first n elements"
+
+    integers
+    |> Seq.skip 4
+    |> Seq.iter (printfn "%d")
+
+let demoSkipWhile () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.skipWhile - return a sequence without the first elements that don't meet a predicate"
+
+    let isPrime n =
+        match n with
+        | _ when n < 2 -> false
+        | 2 -> true
+        | _ when n % 2 = 0 -> false
+        | _ ->
+            seq { 3 .. 2 .. int (sqrt (float n))}
+            |> Seq.forall (fun x -> n % x <> 0)
+
+    integers
+    |> Seq.skipWhile (fun i -> not (isPrime i))
+    |> Seq.iter (printfn "%d")
+
+let demoSort () =
+    let integers = seq { 0 .. 25 }
+    let mixed =
+        integers
+        |> Seq.randomSample 10
+    printHeader "Seq.sort - return the sorted sequence"
+
+    mixed
+    |> Seq.sort
+    |> Seq.iter (printfn "%d")
+
+let demoSortBy () =
+    let integers = seq { 0 .. 25 }
+    let mixed =
+        integers
+        |> Seq.randomSample 10
+    printHeader "Seq.sortBy - return the sorted sequence by a sorting function"
+
+    let sorter (i:int) =
+        float (i % 2) + (float i / 25.)
+
+    mixed
+    |> Seq.sortBy sorter
+    |> Seq.iter (printfn "%d")
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -828,5 +878,9 @@ let main _argv =
     demoScan ()
     demoScanBack ()
     demoSingleton ()
+    demoSkip ()
+    demoSkipWhile ()
+    demoSort ()
+    demoSortBy ()
     0
 
