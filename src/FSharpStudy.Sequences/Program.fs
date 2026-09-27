@@ -794,10 +794,52 @@ let demoSortBy () =
     printHeader "Seq.sortBy - return the sorted sequence by a sorting function"
 
     let sorter (i:int) =
-        float (i % 2) + (float i / 25.)
+        float (i + (i % 2) * 25) / 25.
 
     mixed
     |> Seq.sortBy sorter
+    |> Seq.iter (printfn "%d")
+
+let demoSortByDescending () =
+    let integers = seq { 0 .. 25 }
+    let mixed =
+        integers
+        |> Seq.randomSample 10
+    printHeader "Seq.sortByDescending - return the sorted sequence by a sorting function in descending order"
+
+    let sorter (i:int) =
+        float (i + (i % 2) * 25) / 25.
+
+    mixed
+    |> Seq.sortByDescending sorter
+    |> Seq.iter (printfn "%d")
+
+let demoSortDescending () =
+    let integers = seq { 0 .. 25 }
+    let mixed =
+        integers
+        |> Seq.randomSample 10
+    printHeader "Seq.sortDescending - return the sorted sequence in descending order"
+
+    mixed
+    |> Seq.sortDescending
+    |> Seq.iter (printfn "%d")
+    
+let demoSortWith () =
+    let integers = seq { 0 .. 25 }
+    let mixed =
+        integers
+        |> Seq.randomSample 10
+    printHeader "Seq.sortWith - return the sorted sequence comparing two elements"
+
+    let sorter x y =
+        match (x % 2, y % 2) with
+        | (0, 1) -> 1
+        | (1, 0) -> -1
+        | _ -> compare x y
+        
+    mixed
+    |> Seq.sortWith sorter
     |> Seq.iter (printfn "%d")
 
 [<EntryPoint>]
@@ -882,5 +924,8 @@ let main _argv =
     demoSkipWhile ()
     demoSort ()
     demoSortBy ()
+    demoSortByDescending ()
+    demoSortDescending ()
+    demoSortWith ()
     0
 
