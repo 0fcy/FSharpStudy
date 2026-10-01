@@ -842,6 +842,30 @@ let demoSortWith () =
     |> Seq.sortWith sorter
     |> Seq.iter (printfn "%d")
 
+let demoSplitInto () =
+    let integers = seq { 0 .. 25 }
+    printHeader "Seq.splitInto - chunk the sequence with a count"
+
+    integers
+    |> Seq.splitInto 5
+    |> Seq.iter (printfn "%A")
+
+let demoSum () =
+    let integers = seq { 0 .. 25 }
+    printHeader "Seq.sum - compute the sum using (+)"
+
+    integers
+    |> Seq.sum
+    |> printfn "%d"
+
+let demoSumBy () =
+    let integers = seq { 0 .. 25 }
+    printHeader "Seq.sumBy - compute the sum with map function"
+
+    integers
+    |> Seq.sumBy (fun i -> float i / 25.)
+    |> printfn "%g"
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -927,5 +951,8 @@ let main _argv =
     demoSortByDescending ()
     demoSortDescending ()
     demoSortWith ()
+    demoSplitInto ()
+    demoSum ()
+    demoSumBy ()
     0
 
