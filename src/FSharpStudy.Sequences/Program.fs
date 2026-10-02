@@ -866,6 +866,31 @@ let demoSumBy () =
     |> Seq.sumBy (fun i -> float i / 25.)
     |> printfn "%g"
 
+let demoTail () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.tail - return the sequence without the first element"
+
+    integers
+    |> Seq.tail
+    |> Seq.iter (printfn "%d")
+
+let demoTake () =
+    let integers = seq { 0 .. 10 }
+    printHeader "Seq.take - return the first number of elements in the seqeunce"
+
+    integers
+    |> Seq.take 6
+    |> Seq.iter (printfn "%d")
+
+let demoTakeWhile () =
+    let integers = seq { -5 .. 2 .. 10 }
+    printHeader "Seq.takeWhile - return the sequence without the first element"
+
+    integers
+    |> Seq.takeWhile ((>) 0)
+    |> Seq.iter (printfn "%d")
+
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -954,5 +979,8 @@ let main _argv =
     demoSplitInto ()
     demoSum ()
     demoSumBy ()
+    demoTail ()
+    demoTake ()
+    demoTakeWhile ()
     0
 
