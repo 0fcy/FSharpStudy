@@ -890,6 +890,43 @@ let demoTakeWhile () =
     |> Seq.takeWhile ((>) 0)
     |> Seq.iter (printfn "%d")
 
+let demoToArray () =
+    let integers = seq { -5 .. 2 .. 15 }
+    printHeader "Seq.toArray - return an array of the sequence"
+
+    integers
+    |> Seq.toArray
+    |> printfn "%A"
+
+let demoToList () =
+    let integers = seq { -5 .. 2 .. 15 }
+    printHeader "Seq.toList - return a list of the sequence"
+
+    integers
+    |> Seq.toList
+    |> printfn "%A"
+
+let demoTranspose () =
+    let triangular = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    let integers = Seq.init 5 (fun i -> seq { i .. 2 .. i + 10 })
+    printHeader "Seq.toArray - transposes a sequence of sequences, as a matrix"
+
+    printfn "Original: "
+    integers
+    |> Seq.iter
+        (fun s ->
+        s
+        |> Seq.chunkBySize 6
+        |> printfn "%A")
+
+    printfn "Transposed: "
+    integers
+    |> Seq.transpose
+    |> Seq.iter
+        (fun s ->
+        s
+        |> Seq.chunkBySize 6
+        |> printfn "%A")
 
 [<EntryPoint>]
 let main _argv =
@@ -982,5 +1019,8 @@ let main _argv =
     demoTail ()
     demoTake ()
     demoTakeWhile ()
+    demoToArray ()
+    demoToList ()
+    demoTranspose ()
     0
 
