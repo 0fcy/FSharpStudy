@@ -907,26 +907,23 @@ let demoToList () =
     |> printfn "%A"
 
 let demoTranspose () =
-    let triangular = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
-    let integers = Seq.init 5 (fun i -> seq { i .. 2 .. i + 10 })
+    let integers = Seq.init 6 (fun i -> seq { i .. 2 .. i + 10 })
     printHeader "Seq.toArray - transposes a sequence of sequences, as a matrix"
+
+    let format ints =
+        ints
+        |> Seq.map string
+        |> String.concat "\t"
+        |> printfn "%s"
 
     printfn "Original: "
     integers
-    |> Seq.iter
-        (fun s ->
-        s
-        |> Seq.chunkBySize 6
-        |> printfn "%A")
+    |> Seq.iter format
 
     printfn "Transposed: "
     integers
     |> Seq.transpose
-    |> Seq.iter
-        (fun s ->
-        s
-        |> Seq.chunkBySize 6
-        |> printfn "%A")
+    |> Seq.iter format
 
 [<EntryPoint>]
 let main _argv =
