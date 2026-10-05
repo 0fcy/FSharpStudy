@@ -908,7 +908,7 @@ let demoToList () =
 
 let demoTranspose () =
     let integers = Seq.init 6 (fun i -> seq { i .. 2 .. i + 10 })
-    printHeader "Seq.toArray - transposes a sequence of sequences, as a matrix"
+    printHeader "Seq.transpose - transposes a sequence of sequences, as a matrix"
 
     let format ints =
         ints
@@ -924,6 +924,48 @@ let demoTranspose () =
     integers
     |> Seq.transpose
     |> Seq.iter format
+
+let demoTruncate () =
+    let integers = seq { 0 .. 2 .. 10 }
+    printHeader "Seq.truncate - returns the sequence which only includes the first n elements"
+
+    integers
+    |> Seq.truncate 4
+    |> Seq.iter (printfn "%d")
+    
+let demoTryExactlyOne () =
+    let integers = seq { 1; 2; 3; 4 }
+    printHeader "Seq.tryExactlyOne - returns Option T, which contains the only element in the sequence or None"
+
+    integers
+    |> Seq.tryExactlyOne
+    |> printfn "%A"
+
+let demoTryFind () =
+    let integers = seq { 2 .. 2 .. 10 }
+    printHeader "Seq.tryFind - returns Option T, which contains the first element that matches the predicate or None"
+
+    let finder i =
+        let k = sqrt (float (8 * i) + 1.)
+        k = int k
+
+    integers
+    |> Seq.tryFind finder
+    |> printfn "%A"
+
+let demoTryFindBack () =
+    let integers = seq { 2 .. 2 .. 10 }
+    printHeader "Seq.tryFindBack - returns Option T, which contains the first element that matches the predicate or None, from the end of the sequence"
+
+    let finder i =
+        let k = sqrt (float (8 * i) + 1.)
+        k = int k
+
+    integers
+    |> Seq.tryFindBack finder
+    |> printfn "%A"
+
+
 
 [<EntryPoint>]
 let main _argv =
@@ -1019,5 +1061,9 @@ let main _argv =
     demoToArray ()
     demoToList ()
     demoTranspose ()
+    demoTruncate ()
+    demoTryExactlyOne ()
+    demoTryFind ()
+    demoTryFindBack ()
     0
 
