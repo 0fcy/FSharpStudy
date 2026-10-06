@@ -965,7 +965,44 @@ let demoTryFindBack () =
     |> Seq.tryFindBack finder
     |> printfn "%A"
 
+let demoTryFindIndex () =
+    let integers = seq { 1 .. 2 .. 10 }
+    printHeader "Seq.tryFindIndex - returns Option T, which contains the index of the first element that matches the predicate or None"
 
+    let finder i =
+        let k = sqrt (float (8 * i) + 1.)
+        k = int k
+
+    integers
+    |> Seq.tryFindIndex finder
+    |> printfn "%A"
+
+let demoTryFindIndexBack () =
+    let integers = seq { 1 .. 2 .. 9 }
+    printHeader "Seq.tryFindIndexBack - returns Option T, which contains the index of the first element that matches the predicate or None, from the end of the sequence"
+
+    let isEven i =
+        i % 2 = 0
+
+    integers
+    |> Seq.tryFindIndexBack isEven
+    |> printfn "%A"
+
+let demoTryHead () =
+    let integers = seq { 3 .. 2 .. 10 }
+    printHeader "Seq.tryHead - returns Option T, which contains the first element of the sequence, if any"
+
+    integers
+    |> Seq.tryHead
+    |> printfn "%A"
+
+let demoTryItem () =
+    let integers = seq { 0 .. 3 .. 20 }
+    printHeader "Seq.tryItem - returns Option T, of the element at nth index"
+
+    integers
+    |> Seq.tryItem 15
+    |> printfn "%A"
 
 [<EntryPoint>]
 let main _argv =
@@ -1065,5 +1102,9 @@ let main _argv =
     demoTryExactlyOne ()
     demoTryFind ()
     demoTryFindBack ()
+    demoTryFindIndex ()
+    demoTryFindIndexBack ()
+    demoTryHead ()
+    demoTryItem ()
     0
 
