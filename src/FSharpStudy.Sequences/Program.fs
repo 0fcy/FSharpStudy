@@ -1004,6 +1004,48 @@ let demoTryItem () =
     |> Seq.tryItem 15
     |> printfn "%A"
 
+let demoTryLast () =
+    let integers = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    printHeader "Seq.tryLast - returns Option T, of the last element"
+
+    integers
+    |> Seq.tryLast
+    |> printfn "%A"
+
+let demoTryPick () =
+    let integers = seq { for i in 1 .. 10 do i * (i + 1) / 2 }
+    printHeader "Seq.tryPick - returns Option T, of the first element that satisfies a predicate"
+
+    let isPrime n =
+        match n with
+        | _ when n < 2 -> false
+        | 2 -> true
+        | _ when n % 2 = 0 -> false
+        | _ ->
+            seq { 3 .. 2 .. int (sqrt (float n))}
+            |> Seq.forall (fun x -> n % x <> 0)
+
+    integers
+    |> Seq.rev
+    |> Seq.tryPick (fun i -> if isPrime i then Some i else None)
+    |> printfn "%A"
+
+let demoUnfold () =
+    printHeader "Seq.unfold - generate a sequence by repeatedly applying a generator function to a state"
+
+    (0, 1)
+    |> Seq.unfold (fun (a, b) -> Some(a, (b, a + b)))
+    |> Seq.take 25
+    |> Seq.iter (printfn "%d")
+
+let demoUpdateAt () =
+    let integers = seq { -15 .. 3 .. 15 }
+    printHeader "Seq.updateAt - update the sequence at a specified index"
+    
+    integers
+    |> Seq.updateAt 5 1
+    |> Seq.iter (printfn "%d")
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -1106,5 +1148,9 @@ let main _argv =
     demoTryFindIndexBack ()
     demoTryHead ()
     demoTryItem ()
+    demoTryLast ()
+    demoTryPick ()
+    demoUnfold ()
+    demoUpdateAt ()
     0
 
