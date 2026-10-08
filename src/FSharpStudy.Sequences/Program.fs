@@ -1046,6 +1046,70 @@ let demoUpdateAt () =
     |> Seq.updateAt 5 1
     |> Seq.iter (printfn "%d")
 
+let demoWhere () =
+    let fib =
+        (0, 1)
+        |> Seq.unfold (fun (a, b) -> Some (a, (b, a + b)))
+    printHeader "Seq.where - return a sequence of elements that match the predicate"
+    
+    let isPrime n =
+        match n with
+        | _ when n < 2 -> false
+        | 2 -> true
+        | _ when n % 2 = 0 -> false
+        | _ ->
+            seq { 3 .. 2 .. int (sqrt (float n))}
+            |> Seq.forall (fun x -> n % x <> 0)
+
+    printfn "First ten prime fibs:"
+    fib
+    |> Seq.where isPrime
+    |> Seq.take 10
+    |> Seq.iter (printfn "%d")
+
+let demoWindowed () =
+    let integers = seq { 0 .. 10 }
+    printHeader """Seq.windowed - returns sliding windows of elements:
+        Takes the first n elements into the first array and moves the start index until the end is reached"""
+    
+    integers
+    |> Seq.windowed 6
+    |> Seq.iter (printfn "%A")
+
+    integers
+    |> Seq.windowed 6
+    |> Seq.map Array.sum
+    |> Seq.map string
+    |> String.concat ", "
+    |> printfn "Sums: %s"
+
+let demoZip () =
+    let evens = seq { 0 .. 2 .. 15 }
+    let odds = seq { 1 .. 2 .. 10 }
+    printHeader "Seq.zip - Combine two sequences together using tuples to match every element (stops when no more matches)"
+    
+    (evens, odds)
+    ||> Seq.zip
+    |> Seq.iter (printfn "%A")
+
+let demoZip3 () =
+    let mod3r0 = seq { 0 .. 3 .. 15 }
+    let mod3r1 = seq { 1 .. 3 .. 15 }
+    let mod3r2 = seq { 2 .. 3 .. 15 }
+    printHeader "Seq.zip3 - Combine three sequences together using tuples to match every element (stops when no more matches)"
+    
+    (mod3r0, mod3r1, mod3r2)
+    |||> Seq.zip3
+    |> Seq.iter (printfn "%A")
+
+    (mod3r0, mod3r1, mod3r2)
+    |||> Seq.zip3
+    |> Seq.map (fun (a, b, c) -> seq { a; b; c })
+    |> Seq.concat
+    |> Seq.map string
+    |> String.concat ", "
+    |> printfn "%s"
+
 [<EntryPoint>]
 let main _argv =
     demoForVsIter ()
@@ -1152,5 +1216,8 @@ let main _argv =
     demoTryPick ()
     demoUnfold ()
     demoUpdateAt ()
+    demoWhere ()
+    demoWindowed ()
+    demoZip ()
+    demoZip3 ()
     0
-
