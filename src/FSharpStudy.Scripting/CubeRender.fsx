@@ -1,4 +1,6 @@
-﻿[<Struct>]
+﻿open System
+
+[<Struct>]
 type Vector3 = { X: float; Y: float; Z: float }
 
 [<Struct>]
@@ -20,6 +22,33 @@ type Matrix4x4 = Vector4 * Vector4 * Vector4 * Vector4
 module Matrix =
     let identity: Matrix4x4 = (Vector4.unitX, Vector4.unitY, Vector4.unitZ, Vector4.unitW)
     
+    let rotateX (angle: float) : Matrix4x4 =
+        let struct (s, c) = Math.SinCos angle
+        (
+            { X = 1; Y = 0; Z = 0; W = 0 },
+            { X = 0; Y = c; Z = -s; W = 0 },
+            { X = 0; Y = s; Z = c; W = 0 },
+            { X = 0; Y = 0; Z = 0; W = 1 }
+        )
+
+    let rotateY (angle: float) : Matrix4x4 =
+        let struct (s, c) = Math.SinCos angle
+        (
+            { X = c; Y = 0; Z = s; W = 0 },
+            { X = 0; Y = 1; Z = 0; W = 0 },
+            { X = -s; Y = 0; Z = c; W = 0 },
+            { X = 0; Y = 0; Z = 0; W = 1 }
+        )
+
+    let rotateZ (angle: float) : Matrix4x4 =
+        let struct (s, c) = Math.SinCos angle
+        (
+            { X = c; Y = -s; Z = 0; W = 0 },
+            { X = s; Y = c; Z = 0; W = 0 },
+            { X = 0; Y = 0; Z = 1; W = 0 },
+            { X = 0; Y = 0; Z = 0; W = 1 }
+        )
+
     let transpose (matrix: Matrix4x4): Matrix4x4 =
         let (r0, r1, r2, r3) = matrix
         (
@@ -43,18 +72,16 @@ module Matrix =
         let (r0, r1, r2, r3) = matrix
         sprintf "%s\n%s\n%s\n%s" (r0.ToString()) (r1.ToString()) (r2.ToString()) (r3.ToString())
 
-let r10 = { X = 1; Y = 2; Z = 3; W = 4 }
-let r11 = { X = 3; Y = 5; Z = 7; W = 9 }
-let r12 = { X = 5; Y = 8; Z = 11; W = 14 }
-let r13 = { X = 7; Y = 11; Z = 15; W = 19 }
+let r0 = { X = 1; Y = 2; Z = 3; W = 4 }
+let r1 = { X = 3; Y = 5; Z = 7; W = 9 }
+let r2 = { X = 5; Y = 8; Z = 11; W = 14 }
+let r3 = { X = 7; Y = 11; Z = 15; W = 19 }
 
-let r20 = { X = 1; Y = 2; Z = 3; W = 4 }
-let r21 = { X = 3; Y = 5; Z = 7; W = 9 }
-let r22 = { X = 5; Y = 8; Z = 11; W = 14 }
-let r23 = { X = 7; Y = 11; Z = 15; W = 19 }
+let a = (r0, r1, r2, r3)
 
-let a = (r10, r11, r12, r13)
-let b = (r20, r21, r22, r23)
-let multiplied = Matrix.multiply a b
+let rotate45 = Matrix.rotateX (System.Math.PI / 4.)
+let rotated =
+    a
+    |> Matrix.multiply rotate45
 
-printfn "%s" (Matrix.print multiplied)
+printfn "%s" (Matrix.print rotated)
