@@ -12,6 +12,9 @@ type Vector4 =
     static member unitW = { X = 0; Y = 0; Z = 0; W = 1 }
 
     static member unit x y z w = { X = x; Y = y; Z = z; W = w }
+    static member deconstruct v = (v.X, v.Y, v.Z, v.W)
+    static member asArray v = [| v.X; v.Y; v.Z; v.W |]
+
     static member dot (a: Vector4) (b: Vector4) = a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W
     static member normalize (v: Vector4) =
         let l = sqrt (v.X * v.X + v.Y * v.Y + v.Z * v.Z)
@@ -19,14 +22,17 @@ type Vector4 =
             then v
             else Vector4.unit (v.X / l) (v.Y / l) (v.Z / l) v.W
 
-    override this.ToString (): string =
-        let a =
-            [| this.X; this.Y; this.Z; this.W |]
-            |> Seq.map (fun f -> f.ToString().Length)
-            |> Seq.max
-    
-        sprintf $"¦ {this.X.ToString().PadRight(a)} ¦\n¦ {this.Y.ToString().PadRight(a)} ¦\n¦ {this.Z.ToString().PadRight(a)} ¦\n¦ {this.W.ToString().PadRight(a)} ¦"
-        //sprintf $"¦ %8.2 ¦\n¦ %8.2f ¦\n¦ %8.2f ¦\n¦ %8.2f ¦" this.X this.Y this.Z this.W
+    override this.ToString() =
+        let values = Vector4.asArray this
+        let pad =
+            values
+            |> Array.map (sprintf "%.2f")
+            |> Array.map String.length
+            |> Array.max
+
+        values 
+        |> Array.map (fun v -> sprintf "¦ %-*.2f ¦" pad v)
+        |> String.concat "\n"
 
 type Matrix4x4 = Vector4 * Vector4 * Vector4 * Vector4
 
