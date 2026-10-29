@@ -1,4 +1,5 @@
 ﻿open System
+open System.Text
 
 [<Struct>]
 type Vector3 = { X: float; Y: float; Z: float }
@@ -12,8 +13,15 @@ type Vector4 =
     static member unitW = { X = 0; Y = 0; Z = 0; W = 1 }
 
     static member unit x y z w = { X = x; Y = y; Z = z; W = w }
+    static member scalar a = { X = a; Y = a; Z = a; W = a }
+    static member point x y z = { X = x; Y = y; Z = z; W = 1 }
+    static member dir x y z = { X = x; Y = y; Z = z; W = 0 }
+
     static member deconstruct v = (v.X, v.Y, v.Z, v.W)
-    static member asArray v = [| v.X; v.Y; v.Z; v.W |]
+    static member arr v = [| v.X; v.Y; v.Z; v.W |]
+
+    static member maxBy f v = Vector4.arr v |> Array.maxBy f
+
 
     static member dot (a: Vector4) (b: Vector4) = a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W
     static member normalize (v: Vector4) =
@@ -23,22 +31,25 @@ type Vector4 =
             else Vector4.unit (v.X / l) (v.Y / l) (v.Z / l) v.W
 
     override this.ToString() =
-        let values = Vector4.asArray this
+        let values = Vector4.arr this
         let pad =
             values
-            |> Array.map (sprintf "%.2f")
+            |> Array.map (sprintf "%g")
             |> Array.map String.length
             |> Array.max
 
         values 
-        |> Array.map (fun v -> sprintf "¦ %-*.2f ¦" pad v)
-        |> String.concat "\n"
+        |> Array.map (fun v -> sprintf "¦ %-*g ¦" pad v)
+        |> String.concat String.Empty
+
+
 
 type Matrix4x4 = Vector4 * Vector4 * Vector4 * Vector4
 
 module Matrix =
     let identity: Matrix4x4 = (Vector4.unitX, Vector4.unitY, Vector4.unitZ, Vector4.unitW)
-    
+
+    let translate x y z = (Vector4.unitX, Vector4.unitY, Vector4.unitZ, Vector4.unit x y z 1)
     let rotateX (angle: float) : Matrix4x4 =
         let struct (s, c) = Math.SinCos angle
         (
@@ -47,7 +58,6 @@ module Matrix =
             { X = 0; Y = -s; Z = c; W = 0 },
             { X = 0; Y = 0; Z = 0; W = 1 }
         )
-
     let rotateY (angle: float) : Matrix4x4 =
         let struct (s, c) = Math.SinCos angle
         (
@@ -56,7 +66,6 @@ module Matrix =
             { X = s; Y = 0; Z = c; W = 0 },
             { X = 0; Y = 0; Z = 0; W = 1 }
         )
-
     let rotateZ (angle: float) : Matrix4x4 =
         let struct (s, c) = Math.SinCos angle
         (
@@ -75,40 +84,153 @@ module Matrix =
             Vector4.unit r3.X r3.Y r3.Z r3.W
         )
 
+    let transform (m: Matrix4x4) (v: Vector4) =
+        let c0, c1, c2, c3 = m
+        Vector4.unit
+            (c0.X * v.X + c1.X * v.Y + c2.X * v.Z + c3.X * v.W)
+            (c0.Y * v.X + c1.Y * v.Y + c2.Y * v.Z + c3.Y * v.W)
+            (c0.Z * v.X + c1.Z * v.Y + c2.Z * v.Z + c3.Z * v.W)
+            (c0.W * v.X + c1.W * v.Y + c2.W * v.Z + c3.W * v.W)
+
     let multiply (a: Matrix4x4) (b: Matrix4x4) : Matrix4x4 =
-        let bc0, bc1, bc2, bc3 = b
-        let (ar0, ar1, ar2, ar3) = transpose a
+        let b0, b1, b2, b3 = b
+        (transform a b0, transform a b1, transform a b2, transform a b3)
+
+
+
+    let projection fovY aspect near far =
+        let f = 1. / (tan (fovY * 0.5))
+        let nf = 1. / (near - far)
         (
-            { X = Vector4.dot ar0 bc0; Y = Vector4.dot ar1 bc0; Z = Vector4.dot ar2 bc0; W = Vector4.dot ar3 bc0 },
-            { X = Vector4.dot ar0 bc1; Y = Vector4.dot ar1 bc1; Z = Vector4.dot ar2 bc1; W = Vector4.dot ar3 bc1 },
-            { X = Vector4.dot ar0 bc2; Y = Vector4.dot ar1 bc2; Z = Vector4.dot ar2 bc2; W = Vector4.dot ar3 bc2 },
-            { X = Vector4.dot ar0 bc3; Y = Vector4.dot ar1 bc3; Z = Vector4.dot ar2 bc3; W = Vector4.dot ar3 bc3 }
+            Vector4.unit (f / aspect) 0 0 0,
+            Vector4.unit 0 f 0 0,
+            Vector4.unit 0 0 ((far + near) * nf) -1,
+            Vector4.unit 0 0 ((2. * far * near) * nf) 0
         )
 
-    let print (matrix: Matrix4x4) : string =
-        let (r0, r1, r2, r3) = matrix
-        sprintf "%s\n%s\n%s\n%s" (r0.ToString()) (r1.ToString()) (r2.ToString()) (r3.ToString())
+    let print (m: Matrix4x4) : string =
+        let (r0, r1, r2, r3) = m
+        sprintf "%s\n%s\n%s\n%s\n" (r0.ToString()) (r1.ToString()) (r2.ToString()) (r3.ToString())
 
-//let r0 = { X = 1; Y = 2; Z = 3; W = 4 }
-//let r1 = { X = 3; Y = 5; Z = 7; W = 9 }
-//let r2 = { X = 5; Y = 8; Z = 11; W = 14 }
-//let r3 = { X = 7; Y = 11; Z = 15; W = 19 }
 
-//let a = (r0, r1, r2, r3)
+type Point =
+    { SX: float; SY: float; InvW: float; Visible: bool }
 
-//let rotate45 = Matrix.rotateX (System.Math.PI / 4.)
-//let rotated =
-//    a
-//    |> Matrix.multiply rotate45
+let toScreen (cols: int) (gridRows: int) (clip: Vector4) =
+    if clip.W <= 1e-6 then
+        { SX = 0; SY = 0; InvW = 0; Visible = false }
+    else
+        let invW = 1. / clip.W
+        let nx = clip.X * invW
+        let ny = clip.Y * invW
+        {
+            SX = (nx + 1.) * 0.5 * float (cols - 1);
+            SY = (1. - ny) * 0.5 * float (gridRows - 1);
+            InvW = invW;
+            Visible = true
+        }
 
-//let a = Matrix.identity
-//let b = Matrix.identity
-//let c = Matrix.multiply a b
-//printfn "%s" (Matrix.print c)
+/// Bresenham. Clips by simply skipping out-of-range cells.
+let drawLine (buf: char[]) (cols: int) (gridRows: int)
+             (ax: int) (ay: int) (bx: int) (by: int) =
+    let dx = abs (bx - ax)
+    let dy = -abs (by - ay)
+    let sx = if ax < bx then 1 else -1
+    let sy = if ay < by then 1 else -1
+    let mutable x = ax
+    let mutable y = ay
+    let mutable err = dx + dy
+    let mutable go = true
+    while go do
+        if x >= 0 && x < cols && y >= 0 && y < gridRows then
+            buf.[y * cols + x] <- '#'
+        if x = bx && y = by then
+            go <- false
+        else
+            let e2 = 2 * err
+            if e2 >= dy then
+                err <- err + dy
+                x <- x + sx
+            if e2 <= dx then
+                err <- err + dx
+                y <- y + sy
 
-let v = Vector4.unit 1.0012 2001 3.2412553 4.2
-let u = Vector4.unit 1 2 3 4
-let vAsString = v.ToString()
-printfn "%s" vAsString
-printfn ""
-printfn "%s" (u.ToString().PadRight(3))
+
+let safeDim (get: unit -> int) (fallback: int) =
+    try
+        let v = get ()
+        if v > 0 then v else fallback
+    with _ -> fallback
+
+let cols     = safeDim (fun () -> Console.WindowWidth)  80
+let rows     = safeDim (fun () -> Console.WindowHeight) 24
+let gridRows = rows - 1        // leave the last line free so we never scroll
+
+// ---- Geometry: a hollow triangle, unit circumradius, in the XY plane ----
+let tri = [| Vector4.point 0.0 2.0 0.0; Vector4.point -1.8660 -1.5 0.0; Vector4.point 1.8660 -1.5 0.0 |]
+
+let edges = [| (0, 1); (1, 2); (2, 0) |]
+
+// ---- Camera ----------------------------------------------------------
+// Sitting at the origin looking down -Z. The "view transform" is just
+// shoving the world 4 units away from us.
+let view = Matrix.translate 0.0 0.0 -4.0
+
+// Terminal cells are ~twice as tall as wide, so the physical aspect
+// ratio is cols / (2 * gridRows). This is the ONLY aspect correction.
+let cellAspect = 2.0
+let aspect = float cols / (cellAspect * float gridRows)
+let proj = Matrix.projection (Math.PI / 3.0) aspect 0.1 100.0
+
+// ---- Buffers allocated ONCE ------------------------------------------
+let buf = Array.create (cols * gridRows) ' '
+let sb  = StringBuilder(cols * gridRows + gridRows * 8)
+
+let sw = Diagnostics.Stopwatch.StartNew()
+let mutable angle = 0.0
+let mutable prev  = 0.0
+let mutable running = true
+
+Console.CancelKeyPress.Add(fun a ->
+    a.Cancel <- true
+    running <- false)
+
+Console.Write "\x1b[?25l"          // hide cursor
+
+while running do
+    let now = sw.Elapsed.TotalSeconds
+    let dt  = now - prev
+    prev <- now
+    angle <- angle + 1.2 * dt      // radians per second, framerate independent
+
+    Array.fill buf 0 buf.Length ' '
+
+    // MODEL: spin about Y first, then tilt about X.
+    // (rightmost applies first)
+    let model = Matrix.multiply (Matrix.rotateX 0.35) (Matrix.rotateY angle)
+
+    // model -> view -> projection, composed once per frame
+    let mvp = Matrix.multiply proj (Matrix.multiply view model)
+
+    // Every vertex through the whole pipeline.
+    let pts =
+        tri
+        |> Array.map (fun p -> Matrix.transform mvp p |> toScreen cols gridRows)
+
+    for (i, j) in edges do
+        let a, b = pts.[i], pts.[j]
+        if a.Visible && b.Visible then
+            drawLine buf cols gridRows
+                (int (Math.Round a.SX)) (int (Math.Round a.SY))
+                (int (Math.Round b.SX)) (int (Math.Round b.SY))
+
+    sb.Clear() |> ignore
+    sb.Append("\x1b[H") |> ignore          // cursor home, no clear
+    for y in 0 .. gridRows - 1 do
+        if y > 0 then sb.Append('\n') |> ignore
+        sb.Append(buf, y * cols, cols) |> ignore
+    Console.Write(sb.ToString())
+
+    Threading.Thread.Sleep 16              // ~60 fps cap
+
+Console.Write "\x1b[?25h\x1b[0m"           // show cursor, reset attrs
