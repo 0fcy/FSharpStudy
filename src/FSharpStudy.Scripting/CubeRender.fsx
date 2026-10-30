@@ -113,22 +113,26 @@ module Matrix =
         sprintf "%s\n%s\n%s\n%s\n" (r0.ToString()) (r1.ToString()) (r2.ToString()) (r3.ToString())
 
 
+[<Struct>]
 type Point =
     { SX: float; SY: float; InvW: float; Visible: bool }
+    static member unit sx sy invW visible = { SX = sx; SY = sy; InvW = invW; Visible = visible }
+    static member fromVector (cols: int) (rows: int) (v: Vector4) =
+        if v.W <= 1e-6 then
+            Unchecked.defaultof<Point>
+        else
+            let invW = 1. / v.W
+            let nx = v.X * invW
+            let ny = v.Y * invW
+            {
+                SX = (nx + 1.) * 0.5 * float (cols - 1);
+                SY = (1. - ny) * 0.5 * float (rows - 1);
+                InvW = invW;
+                Visible = true
+            }
 
-let toScreen (cols: int) (gridRows: int) (clip: Vector4) =
-    if clip.W <= 1e-6 then
-        { SX = 0; SY = 0; InvW = 0; Visible = false }
-    else
-        let invW = 1. / clip.W
-        let nx = clip.X * invW
-        let ny = clip.Y * invW
-        {
-            SX = (nx + 1.) * 0.5 * float (cols - 1);
-            SY = (1. - ny) * 0.5 * float (gridRows - 1);
-            InvW = invW;
-            Visible = true
-        }
+    static member coordinate p = struct (int (floor (p.SX + 0.5)), int (floor (p.SY + 0.5)))
+    static member diff a b = struct (int (abs (b.SX - a.SX)), int (-abs (b.SY - a.SY))) // Could be wrong due to (+).5
 
 /// Bresenham. Clips by simply skipping out-of-range cells.
 let drawLine (buf: char[]) (cols: int) (gridRows: int)
@@ -154,6 +158,27 @@ let drawLine (buf: char[]) (cols: int) (gridRows: int)
             if e2 <= dx then
                 err <- err + dx
                 y <- y + sy
+
+module Renderer =
+    let linePositions (a: Point) (b: Point) : (int * int) list =
+        let struct (ax, ay) = Point.coordinate a
+        let struct (bx, by) = Point.coordinate b
+        let struct (dx, dy) = Point.diff a b
+        let sx = if a.SX < b.SX then 1 else -1
+        let sy = if a.SY < b.SY then 1 else -1
+
+        let rec iterate x y err acc =
+            let newAcc = if x = bx && y = bx then (x, y) :: acc else acc
+            if x = bx && y = bx then
+                List.rev newAcc
+            else
+                let e2 = 2 * err
+                let (newErr, finalX) = if e2 >= dy then (err + dy, x + sx) else (err, x)
+                let (finalErr, finalY) = if e2 <= dx then (newErr + dx, y + sy) else (newErr, y)
+                iterate finalX finalY finalErr newAcc
+
+        iterate ax ay (dx + dy) []
+
 
 
 let safeDim (get: unit -> int) (fallback: int) =
@@ -215,14 +240,19 @@ while running do
     // Every vertex through the whole pipeline.
     let pts =
         tri
-        |> Array.map (fun p -> Matrix.transform mvp p |> toScreen cols gridRows)
+        |> Array.map (fun v -> Matrix.transform mvp v)
+        |> Array.map (Point.fromVector cols gridRows)
+        |> Array.allPairs
+        |> Array.map (fun a b -> Renderer.linePositions a b)
 
     for (i, j) in edges do
         let a, b = pts.[i], pts.[j]
-        if a.Visible && b.Visible then
-            drawLine buf cols gridRows
-                (int (Math.Round a.SX)) (int (Math.Round a.SY))
-                (int (Math.Round b.SX)) (int (Math.Round b.SY))
+        //if a.Visible && b.Visible then
+        //    drawLine buf cols gridRows
+        //        (int (Math.Round a.SX)) (int (Math.Round a.SY))
+        //        (int (Math.Round b.SX)) (int (Math.Round b.SY))
+        let ax, ay = pts.[i]
+        let bx, by = pts.[j]
 
     sb.Clear() |> ignore
     sb.Append("\x1b[H") |> ignore          // cursor home, no clear
@@ -231,6 +261,6 @@ while running do
         sb.Append(buf, y * cols, cols) |> ignore
     Console.Write(sb.ToString())
 
-    Threading.Thread.Sleep 16              // ~60 fps cap
+    Threading.Thread.Sleep 8              // ~60 fps cap
 
 Console.Write "\x1b[?25h\x1b[0m"           // show cursor, reset attrs
