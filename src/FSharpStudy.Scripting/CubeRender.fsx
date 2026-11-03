@@ -115,8 +115,8 @@ module Matrix =
 
 [<Struct>]
 type Point =
-    { SX: float; SY: float; InvW: float; Visible: bool }
-    static member unit sx sy invW visible = { SX = sx; SY = sy; InvW = invW; Visible = visible }
+    { SX: float; SY: float; SZ: float; InvW: float; Visible: bool }
+    static member unit sx sy sz invW visible = { SX = sx; SY = sy; SZ = sz; InvW = invW; Visible = visible }
     static member fromVector (cols: int) (rows: int) (v: Vector4) =
         if v.W <= 1e-6 then
             Unchecked.defaultof<Point>
@@ -124,62 +124,84 @@ type Point =
             let invW = 1. / v.W
             let nx = v.X * invW
             let ny = v.Y * invW
+            let nz = v.Z * invW
             {
                 SX = (nx + 1.) * 0.5 * float (cols - 1);
                 SY = (1. - ny) * 0.5 * float (rows - 1);
+                SZ = nz
                 InvW = invW;
                 Visible = true
             }
 
     static member coordinate p = struct (int (floor (p.SX + 0.5)), int (floor (p.SY + 0.5)))
-    static member diff a b = struct (int (abs (b.SX - a.SX)), int (-abs (b.SY - a.SY))) // Could be wrong due to (+).5
 
-/// Bresenham. Clips by simply skipping out-of-range cells.
-let drawLine (buf: char[]) (cols: int) (gridRows: int)
-             (ax: int) (ay: int) (bx: int) (by: int) =
-    let dx = abs (bx - ax)
-    let dy = -abs (by - ay)
-    let sx = if ax < bx then 1 else -1
-    let sy = if ay < by then 1 else -1
-    let mutable x = ax
-    let mutable y = ay
-    let mutable err = dx + dy
-    let mutable go = true
-    while go do
-        if x >= 0 && x < cols && y >= 0 && y < gridRows then
-            buf.[y * cols + x] <- '#'
-        if x = bx && y = by then
-            go <- false
-        else
-            let e2 = 2 * err
-            if e2 >= dy then
-                err <- err + dy
-                x <- x + sx
-            if e2 <= dx then
-                err <- err + dx
-                y <- y + sy
+type RenderState = 
+    { Buffer: char[]; ZBuffer: float[]; Cols: int; Rows: int }
 
 module Renderer =
-    let linePositions (a: Point) (b: Point) : (int * int) list =
+    //let linePositions (a: Point) (b: Point) : (int * int * float) list =
+    //    let struct (ax, ay) = Point.coordinate a
+    //    let struct (bx, by) = Point.coordinate b
+        
+    //    let dx = abs (bx - ax)
+    //    let dy = -abs (by - ay)
+    //    let sx = if a.SX < b.SX then 1 else -1
+    //    let sy = if a.SY < b.SY then 1 else -1
+
+    //    let rec iterate x y err acc =
+    //        let newAcc = (x, y) :: acc
+    //        if x = bx && y = by then
+    //            List.rev newAcc
+    //        else
+    //            let e2 = 2 * err
+    //            let (newErr, finalX) = if e2 >= dy then (err + dy, x + sx) else (err, x)
+    //            let (finalErr, finalY) = if e2 <= dx then (newErr + dx, y + sy) else (newErr, y)
+    //            iterate finalX finalY finalErr newAcc
+
+    //    iterate ax ay (dx + dy) []
+
+    let linePositions (a: Point) (b: Point) : (int * int * float) list =
         let struct (ax, ay) = Point.coordinate a
         let struct (bx, by) = Point.coordinate b
-        let struct (dx, dy) = Point.diff a b
-        let sx = if a.SX < b.SX then 1 else -1
-        let sy = if a.SY < b.SY then 1 else -1
+        let totalSteps = max (abs (bx - ax)) (abs (by - ay))
+    
+        [0 .. totalSteps]
+        |> List.map (fun i ->
+            let t = float i / float totalSteps
+            let x = ax + int (round (t * float (bx - ax)))
+            let y = ay + int (round (t * float (by - ay)))
+            let z = a.SZ + t * (b.SZ - a.SZ)
+            x, y, z)
 
-        let rec iterate x y err acc =
-            let newAcc = if x = bx && y = bx then (x, y) :: acc else acc
-            if x = bx && y = bx then
-                List.rev newAcc
-            else
-                let e2 = 2 * err
-                let (newErr, finalX) = if e2 >= dy then (err + dy, x + sx) else (err, x)
-                let (finalErr, finalY) = if e2 <= dx then (newErr + dx, y + sy) else (newErr, y)
-                iterate finalX finalY finalErr newAcc
+    let renderLine (state: RenderState) (line: Point * Point) : RenderState =
+        let (a, b) = line
+        if not (a.Visible && b.Visible) then state
+        else
+            linePositions a b
+            |> List.fold (fun st (x, y, z) ->
+                if x < 0 || x >= st.Cols || y < 0 || y >= st.Rows then st
+                else
+                    let idx = y * st.Cols + x
+                    if z < st.ZBuffer.[idx] then
+                        Array.set st.Buffer idx '#'
+                        Array.set st.ZBuffer idx z
+                        { st with 
+                            Buffer = Array.copy st.Buffer
+                            ZBuffer = Array.copy st.ZBuffer
+                        }
+                    else
+                        st
+                ) state
 
-        iterate ax ay (dx + dy) []
-
-
+    let renderAll (lines: (Point * Point) array) (cols: int) (rows: int) : char[] =
+        let initialState = 
+            { Buffer = Array.create (cols * rows) ' '
+              ZBuffer = Array.init (cols * rows) (fun _ -> System.Double.MaxValue)
+              Cols = cols; Rows = rows }
+    
+        lines
+        |> Array.fold renderLine initialState
+        |> fun s -> s.Buffer
 
 let safeDim (get: unit -> int) (fallback: int) =
     try
@@ -187,8 +209,8 @@ let safeDim (get: unit -> int) (fallback: int) =
         if v > 0 then v else fallback
     with _ -> fallback
 
-let cols     = safeDim (fun () -> Console.WindowWidth)  80
-let rows     = safeDim (fun () -> Console.WindowHeight) 24
+let cols = Console.WindowWidth
+let rows = Console.WindowHeight
 let gridRows = rows - 1        // leave the last line free so we never scroll
 
 // ---- Geometry: a hollow triangle, unit circumradius, in the XY plane ----
@@ -199,7 +221,7 @@ let edges = [| (0, 1); (1, 2); (2, 0) |]
 // ---- Camera ----------------------------------------------------------
 // Sitting at the origin looking down -Z. The "view transform" is just
 // shoving the world 4 units away from us.
-let view = Matrix.translate 0.0 0.0 -4.0
+let view = Matrix.translate 0.0 0.0 -2.0
 
 // Terminal cells are ~twice as tall as wide, so the physical aspect
 // ratio is cols / (2 * gridRows). This is the ONLY aspect correction.
@@ -213,6 +235,7 @@ let sb  = StringBuilder(cols * gridRows + gridRows * 8)
 
 let sw = Diagnostics.Stopwatch.StartNew()
 let mutable angle = 0.0
+let mutable distance = -3.
 let mutable prev  = 0.0
 let mutable running = true
 
@@ -226,7 +249,14 @@ while running do
     let now = sw.Elapsed.TotalSeconds
     let dt  = now - prev
     prev <- now
-    angle <- angle + 1.2 * dt      // radians per second, framerate independent
+    angle <- angle + 5. * dt      // radians per second, framerate independent
+
+    if Console.KeyAvailable then
+        let key = Console.ReadKey(true)
+        if key.Key = ConsoleKey.UpArrow then
+            distance <- distance + dt * 5.
+        else if key.Key = ConsoleKey.DownArrow then
+            distance <- distance - dt * 5.
 
     Array.fill buf 0 buf.Length ' '
 
@@ -234,33 +264,50 @@ while running do
     // (rightmost applies first)
     let model = Matrix.multiply (Matrix.rotateX 0.35) (Matrix.rotateY angle)
 
+    printf "distance %g" distance
+    let view = Matrix.translate 0.0 0.0 distance
+    
     // model -> view -> projection, composed once per frame
     let mvp = Matrix.multiply proj (Matrix.multiply view model)
 
     // Every vertex through the whole pipeline.
     let pts =
         tri
-        |> Array.map (fun v -> Matrix.transform mvp v)
+        |> Array.map (Matrix.transform mvp)
         |> Array.map (Point.fromVector cols gridRows)
-        |> Array.allPairs
-        |> Array.map (fun a b -> Renderer.linePositions a b)
 
-    for (i, j) in edges do
-        let a, b = pts.[i], pts.[j]
-        //if a.Visible && b.Visible then
-        //    drawLine buf cols gridRows
-        //        (int (Math.Round a.SX)) (int (Math.Round a.SY))
-        //        (int (Math.Round b.SX)) (int (Math.Round b.SY))
-        let ax, ay = pts.[i]
-        let bx, by = pts.[j]
+    let lines = (pts, pts) ||> Array.allPairs
 
+    //let pixels =
+    //    edges
+    //    |> Array.collect (fun (i, j) ->
+    //        let a, b = pts.[i], pts.[j]
+    //        if a.Visible && b.Visible then
+    //            Renderer.linePositions a b |> List.toArray
+    //        else
+    //            [||])
+
+    //for x, y in pixels do
+    //    if x >= 0 && x < cols && y >= 0 && y < gridRows then
+    //        buf.[y * cols + x] <- '#'
+
+    //sb.Clear() |> ignore
+    //sb.Append("\x1b[H") |> ignore          // cursor home, no clear
+    //for y in 0 .. gridRows - 1 do
+    //    if y > 0 then sb.Append('\n') |> ignore
+    //    sb.Append(buf, y * cols, cols) |> ignore
+    //Console.Write(sb.ToString())
+
+
+    let pixels = Renderer.renderAll lines cols gridRows
+    
     sb.Clear() |> ignore
     sb.Append("\x1b[H") |> ignore          // cursor home, no clear
     for y in 0 .. gridRows - 1 do
         if y > 0 then sb.Append('\n') |> ignore
-        sb.Append(buf, y * cols, cols) |> ignore
+        sb.Append(pixels, y * cols, cols) |> ignore
     Console.Write(sb.ToString())
 
-    Threading.Thread.Sleep 8              // ~60 fps cap
+    Threading.Thread.Sleep 16              // ~60 fps cap
 
 Console.Write "\x1b[?25h\x1b[0m"           // show cursor, reset attrs
