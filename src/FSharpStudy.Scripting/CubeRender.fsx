@@ -117,7 +117,7 @@ module Matrix =
 type Point =
     { SX: float; SY: float; SZ: float; InvW: float; Visible: bool }
     static member unit sx sy sz invW visible = { SX = sx; SY = sy; SZ = sz; InvW = invW; Visible = visible }
-    static member fromVector (cols: int) (rows: int) (v: Vector4) =
+    static member fromVector cols rows v =
         if v.W <= 1e-6 then
             Unchecked.defaultof<Point>
         else
@@ -126,43 +126,33 @@ type Point =
             let ny = v.Y * invW
             let nz = v.Z * invW
             {
-                SX = (nx + 1.) * 0.5 * float (cols - 1);
-                SY = (1. - ny) * 0.5 * float (rows - 1);
+                SX = (nx + 1.) * 0.5 * float (cols - 1)
+                SY = (1. - ny) * 0.5 * float (rows - 1)
                 SZ = nz
-                InvW = invW;
+                InvW = invW
                 Visible = true
             }
 
-    static member coordinate p = struct (int (floor (p.SX + 0.5)), int (floor (p.SY + 0.5)))
+    static member coordinate p = struct (int (floor (p.SX + 0.5)), int (floor (p.SY + 0.5)))    
+    
+// Change to Line = Point * Point possibly
+[<Struct>]
+type Line =
+    { A: Point; B: Point }
+    member this.Visible = this.A.Visible && this.B.Visible
 
-type RenderState = 
-    { Buffer: char[]; ZBuffer: float[]; Cols: int; Rows: int }
+    static member unit a b = { A = a; B = b }
+    static member coords a b =
+        let ax, ay, az = a
+        let bx, by, bz = b
+        {
+            A = { SX = ax; SY = ay; SZ = az; InvW = 1; Visible = true }
+            B = { SX = bx; SY = by; SZ = bz; InvW = 1; Visible = true }
+        }
 
-module Renderer =
-    //let linePositions (a: Point) (b: Point) : (int * int * float) list =
-    //    let struct (ax, ay) = Point.coordinate a
-    //    let struct (bx, by) = Point.coordinate b
-        
-    //    let dx = abs (bx - ax)
-    //    let dy = -abs (by - ay)
-    //    let sx = if a.SX < b.SX then 1 else -1
-    //    let sy = if a.SY < b.SY then 1 else -1
-
-    //    let rec iterate x y err acc =
-    //        let newAcc = (x, y) :: acc
-    //        if x = bx && y = by then
-    //            List.rev newAcc
-    //        else
-    //            let e2 = 2 * err
-    //            let (newErr, finalX) = if e2 >= dy then (err + dy, x + sx) else (err, x)
-    //            let (finalErr, finalY) = if e2 <= dx then (newErr + dx, y + sy) else (newErr, y)
-    //            iterate finalX finalY finalErr newAcc
-
-    //    iterate ax ay (dx + dy) []
-
-    let linePositions (a: Point) (b: Point) : (int * int * float) list =
-        let struct (ax, ay) = Point.coordinate a
-        let struct (bx, by) = Point.coordinate b
+    static member positions l : (int * int * float) list =
+        let struct (ax, ay) = Point.coordinate l.A
+        let struct (bx, by) = Point.coordinate l.B
         let totalSteps = max (abs (bx - ax)) (abs (by - ay))
     
         [0 .. totalSteps]
@@ -170,14 +160,17 @@ module Renderer =
             let t = float i / float totalSteps
             let x = ax + int (round (t * float (bx - ax)))
             let y = ay + int (round (t * float (by - ay)))
-            let z = a.SZ + t * (b.SZ - a.SZ)
+            let z = l.A.SZ + t * (l.B.SZ - l.A.SZ)
             x, y, z)
 
-    let renderLine (state: RenderState) (line: Point * Point) : RenderState =
-        let (a, b) = line
-        if not (a.Visible && b.Visible) then state
+type RenderState = 
+    { Buffer: char[]; ZBuffer: float[]; Cols: int; Rows: int }
+
+module Renderer =
+    let renderLine (state: RenderState) (line: Line) : RenderState =
+        if not line.Visible then state
         else
-            linePositions a b
+            Line.positions line
             |> List.fold (fun st (x, y, z) ->
                 if x < 0 || x >= st.Cols || y < 0 || y >= st.Rows then st
                 else
@@ -193,7 +186,7 @@ module Renderer =
                         st
                 ) state
 
-    let renderAll (lines: (Point * Point) array) (cols: int) (rows: int) : char[] =
+    let renderAll (lines: Line array) (cols: int) (rows: int) : char[] =
         let initialState = 
             { Buffer = Array.create (cols * rows) ' '
               ZBuffer = Array.init (cols * rows) (fun _ -> System.Double.MaxValue)
@@ -202,12 +195,6 @@ module Renderer =
         lines
         |> Array.fold renderLine initialState
         |> fun s -> s.Buffer
-
-let safeDim (get: unit -> int) (fallback: int) =
-    try
-        let v = get ()
-        if v > 0 then v else fallback
-    with _ -> fallback
 
 let cols = Console.WindowWidth
 let rows = Console.WindowHeight
@@ -276,7 +263,12 @@ while running do
         |> Array.map (Matrix.transform mvp)
         |> Array.map (Point.fromVector cols gridRows)
 
-    let lines = (pts, pts) ||> Array.allPairs
+    let lines =
+        (pts, pts)
+        ||> Array.allPairs
+        |> Array.map (fun points ->
+            let a, b = points
+            Line.unit a b)
 
     //let pixels =
     //    edges
