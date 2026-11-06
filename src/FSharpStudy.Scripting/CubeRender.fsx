@@ -163,6 +163,31 @@ type Line =
             let z = l.A.SZ + t * (l.B.SZ - l.A.SZ)
             x, y, z)
 
+[<Struct>]
+type Triangle =
+    { V0: Point; V1: Point; V2: Point }
+    
+    static member unit (v0: Point) (v1: Point) (v2: Point) : Triangle =
+        { V0 = v0; V1 = v1; V2 = v2 }
+
+    static member edges (t: Triangle) : Line list =
+        [ Line.unit t.V0 t.V1
+          Line.unit t.V1 t.V2
+          Line.unit t.V2 t.V0 ]
+
+    static member boundingBox (t: Triangle) : (int * int * int * int) =
+        let struct (x0, y0) = Point.coordinate t.V0
+        let struct (x1, y1) = Point.coordinate t.V1
+        let struct (x2, y2) = Point.coordinate t.V2
+        let minX = min x0 (min x1 x2)
+        let maxX = max x0 (max x1 x2)
+        let minY = min y0 (min y1 y2)
+        let maxY = max y0 (max y1 y2)
+        minX, minY, maxX, maxY
+
+    static member centroidZ (t: Triangle) : float =
+        (t.V0.SZ + t.V1.SZ + t.V2.SZ) / 3.0
+
 type RenderState = 
     { Buffer: char[]; ZBuffer: float[]; Cols: int; Rows: int }
 
@@ -202,7 +227,6 @@ let gridRows = rows - 1        // leave the last line free so we never scroll
 
 // ---- Geometry: a hollow triangle, unit circumradius, in the XY plane ----
 let tri = [| Vector4.point 0.0 2.0 0.0; Vector4.point -1.8660 -1.5 0.0; Vector4.point 1.8660 -1.5 0.0 |]
-
 let edges = [| (0, 1); (1, 2); (2, 0) |]
 
 // ---- Camera ----------------------------------------------------------
